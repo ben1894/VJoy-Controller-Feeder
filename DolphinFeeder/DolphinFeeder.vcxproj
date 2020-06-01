@@ -155,7 +155,9 @@
     <ClCompile Include="Serial.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="public.h" />
     <ClInclude Include="Serial.h" />
+    <ClInclude Include="vjoyinterface.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

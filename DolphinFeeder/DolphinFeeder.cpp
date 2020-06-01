@@ -6,6 +6,9 @@
 
 int main()
 {
+	CSerial test;
+	test.Open(5, 9600);
+	
     std::cout << "Hello World!\n";
 }
 
