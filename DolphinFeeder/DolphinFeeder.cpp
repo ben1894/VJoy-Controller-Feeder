@@ -2,13 +2,43 @@
 //
 #include <Windows.h>
 #include <iostream>
+#include "tchar.h"
 #include "Serial.h"
+#include "public.h"
+#include "vjoyinterface.h"
 
 int main()
 {
+	if (!vJoyEnabled())
+	{
+		_tprintf(_T("Failed Getting vJoy attributes.\n"));
+		return -2;
+	}	WORD VerDll, VerDrv;
+	if (!DriverMatch(&VerDll, &VerDrv))
+		_tprintf(_T("Failed\r\nvJoy Driver (version %04x) does not match vJoyInterface DLL(version % 04x)\n"), VerDrv ,VerDll);
+	else
+			_tprintf(_T("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n"), VerDrv);	int iInterface = 1;
+	VjdStat status = GetVJDStatus(iInterface);
+	switch (status)
+	{
+	case VJD_STAT_OWN:
+		_tprintf(_T("vJoy Device %d is already owned by this feeder\n"), iInterface);
+		break;
+	case VJD_STAT_FREE:
+		_tprintf(_T("vJoy Device %d is free\n"), iInterface);
+		break;
+	case VJD_STAT_BUSY:
+		_tprintf(_T("vJoy Device %d is already owned by another feeder\nCannot continue\n"), iInterface);
+		return -3;
+	case VJD_STAT_MISS:
+		_tprintf(_T("vJoy Device %d is not installed or disabled\nCannot continue\n"), iInterface);
+		return -4;
+	default:
+		_tprintf(_T("vJoy Device %d general error\nCannot continue\n"), iInterface);
+	}
+
 	CSerial test;
 	test.Open(5, 9600);
-	
     std::cout << "Hello World!\n";
 }
 
