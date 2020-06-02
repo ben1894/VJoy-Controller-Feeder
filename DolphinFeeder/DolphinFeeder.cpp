@@ -2,6 +2,7 @@
 //
 #include <Windows.h>
 #include <iostream>
+#include <vector>
 #include "tchar.h"
 #include "Serial.h"
 #include "public.h"
@@ -17,8 +18,10 @@ int main()
 	if (!DriverMatch(&VerDll, &VerDrv))
 		_tprintf(_T("Failed\r\nvJoy Driver (version %04x) does not match vJoyInterface DLL(version % 04x)\n"), VerDrv ,VerDll);
 	else
-			_tprintf(_T("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n"), VerDrv);	int iInterface = 1;
+			_tprintf(_T("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n"), VerDrv);	
+	int iInterface = 1;
 	VjdStat status = GetVJDStatus(iInterface);
+
 	switch (status)
 	{
 	case VJD_STAT_OWN:
@@ -37,8 +40,33 @@ int main()
 		_tprintf(_T("vJoy Device %d general error\nCannot continue\n"), iInterface);
 	}
 
+	int nButtons = GetVJDButtonNumber(iInterface);
+
 	CSerial test;
-	test.Open(5, 9600);
+	while (test.Open(3, 9600) == 0)
+	{
+		Sleep(500);
+		std::cout << "oof";
+	}
+
+	std::vector<unsigned char> full;
+	while (1)
+	{
+		int size = test.ReadDataWaiting();
+		if (size)
+		{
+			char* lpBuffer = new char[size];
+			int nBytesRead = test.ReadData(lpBuffer, size);
+			
+			for (int i = 0; i < size; i++)
+			{
+				std::cout << lpBuffer[i];
+			}
+			dataVec.insert(dataVec.end(), &dataArray[0], &dataArray[dataArraySize]);
+			delete[]lpBuffer;
+		}
+		Sleep(1000);
+	}
     std::cout << "Hello World!\n";
 }
 
