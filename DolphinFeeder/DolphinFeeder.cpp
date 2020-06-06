@@ -7,6 +7,9 @@
 #include "Serial.h"
 #include "public.h"
 #include "vjoyinterface.h"
+const byte key = 255; 
+const int chunkSize = 5;
+
 
 int main()
 {
@@ -43,29 +46,64 @@ int main()
 	int nButtons = GetVJDButtonNumber(iInterface);
 
 	CSerial test;
-	while (test.Open(3, 9600) == 0)
+	while (test.Open(4, 9600) == 0)
 	{
 		Sleep(500);
 		std::cout << "oof";
 	}
+	//if(end - pos > length of numbers - do the data thing)
+	
+	std::vector<byte> receivedData;
 
-	std::vector<unsigned char> full;
-	while (1)
+	while(1)
 	{
 		int size = test.ReadDataWaiting();
-		if (size)
+		if(size)
 		{
-			char* lpBuffer = new char[size];
+			byte* lpBuffer = new byte[size];
 			int nBytesRead = test.ReadData(lpBuffer, size);
-			
-			for (int i = 0; i < size; i++)
+
+			for(int i = 0; i < size; i++)
 			{
 				std::cout << lpBuffer[i];
 			}
-			dataVec.insert(dataVec.end(), &dataArray[0], &dataArray[dataArraySize]);
+			
+			receivedData.insert(receivedData.end(), &lpBuffer[0], &lpBuffer[size]);
+			
 			delete[]lpBuffer;
+			std::cout << "\n";
 		}
-		Sleep(1000);
+
+		bool found = false;
+		int position = 0;
+			
+		for(unsigned int i = 0; i < receivedData.size(); i++)
+		{
+			if(receivedData[i] == key)
+			{
+				found = true;
+				position = i;
+				break;
+			}
+		}
+
+		if(found)
+		{
+			//check if other all bytes have been received
+			if((receivedData.size() - position) >= chunkSize)
+			{
+				receivedData[position + 1];
+				receivedData[position + 2];
+				receivedData[position + 3];
+				receivedData[position + 4];
+				receivedData[position + 5];
+
+				//erase values that were just read
+				receivedData.erase(receivedData.begin(), receivedData.begin() + position + chunkSize);
+			}
+		}
+
+		Sleep(10);
 	}
     std::cout << "Hello World!\n";
 }
