@@ -10,7 +10,6 @@
 const byte key = 255; 
 const int chunkSize = 5;
 
-
 int main()
 {
 	if (!vJoyEnabled())
@@ -54,40 +53,43 @@ int main()
 	{
 		_tprintf(_T("Acquired: vJoy device number %d.\n"), iInterface);
 	}
-	int nButtons = GetVJDButtonNumber(iInterface);
 
+
+
+
+	int nButtons = GetVJDButtonNumber(iInterface);
 	CSerial test;
 	while (test.Open(4, 9600) == 0)
 	{
 		Sleep(500);
 		std::cout << "oof";
 	}
-	//if(end - pos > length of numbers - do the data thing)
 	
 	std::vector<byte> receivedData;
-	
+
+	//Declare here to prevent constant initialization
+	JOYSTICK_POSITION_V2 iReport;
+	iReport.bDevice = iInterface;
+
 	while(1)
 	{
+		//check if data is waiting to be read
 		int size = test.ReadDataWaiting();
 		if(size)
 		{
+			//store data to array
 			byte* lpBuffer = new byte[size];
 			int nBytesRead = test.ReadData(lpBuffer, size);
 
-			/*for(int i = 0; i < size; i++)
-			{
-				std::cout << lpBuffer[i];
-			}*/
-			
+			//add data to full vector
 			receivedData.insert(receivedData.end(), &lpBuffer[0], &lpBuffer[size]);
 			
 			delete[]lpBuffer;
-			//std::cout << "\n";
 		}
 
+		//search vector for first instance of key
 		bool found = false;
 		int position = 0;
-		//std::cout << "1";
 		for(unsigned int i = 0; i < receivedData.size(); i++)
 		{
 			if(receivedData[i] == key)
@@ -97,38 +99,29 @@ int main()
 				break;
 			}
 		}
-		//std::cout << position;
-		if(found)
-		{
-			JOYSTICK_POSITION_V2 iReport;
-			iReport.bDevice = 1;
-			/*
-			EEBlue.write(x100);
-			EEBlue.write(x10);
-			//EEBlue.print(x1);
 
-			EEBlue.write(y100);
-			EEBlue.write(y10);
-			//EEBlue.print(y1);
-			*/
+		//if the 255 exist in the vector
+		//and all the bytes have been recieved (accounts for bytes already in buffer)
+		if(found && ((receivedData.size() - position) > chunkSize))
+		{			
 			/*for(unsigned int i = 0; i < receivedData.size(); i++)
 			{
 				std::cout << (int)receivedData[i] << ",";
-			}*/
-			//std::cout << "\n";
-			//check if other all bytes have been received
-			if((receivedData.size() - position) > chunkSize)
-			{
-				iReport.lButtons = 0; //pointer was reading old memory data. Have to manually clear it.
-				//std::cout << (int)receivedData[position + 1] << "\n";
-				iReport.lButtons |= (long)receivedData[position + 1];
-				iReport.wAxisX = (receivedData[position + 2]*100) + receivedData[position + 3];
-				iReport.wAxisY =  (receivedData[position + 4]*100) + receivedData[position + 5];
-
-				//erase values that were just read
-				receivedData.erase(receivedData.begin(), receivedData.begin() + position + chunkSize);
 			}
-			UpdateVJD(1, &iReport);
+			//std::cout << "\n";
+			//check if other all bytes have been received*/
+
+			//255, buttons, x100, x10, y100, y10
+			//iReport.lButtons |= (long)receivedData[position + 1]; //bit operations will be needed for more than 8 buttons
+			iReport.lButtons = receivedData[position + 1]; 
+			iReport.wAxisX = (receivedData[position + 2]*100) + receivedData[position + 3];
+			iReport.wAxisY =  (receivedData[position + 4]*100) + receivedData[position + 5];
+
+			//erase values that were just read
+			receivedData.erase(receivedData.begin(), receivedData.begin() + position + chunkSize);
+			
+			//update the dll
+			UpdateVJD(iInterface, &iReport);
 		}
 
 		//Delay to not use all the CPU checking for values that aren't sent yet
