@@ -7,11 +7,20 @@
 #include "Serial.h"
 #include "public.h"
 #include "vjoyinterface.h"
+#include <stdio.h>
+
+HANDLE hStdin;
+DWORD fdwSaveOldMode;
+
 const byte key = 255; 
 const int chunkSize = 5;
 
 int main()
 {
+	HANDLE rhnd = GetStdHandle(STD_INPUT_HANDLE);  // handle to read console
+	DWORD Events = 0;     // Event count
+	DWORD EventsRead = 0; // Events read from console
+
 	if (!vJoyEnabled())
 	{
 		_tprintf(_T("Failed Getting vJoy attributes.\n"));
@@ -77,6 +86,31 @@ int main()
 
 	while(1)
 	{
+		GetNumberOfConsoleInputEvents(rhnd, &Events);
+		if (Events != 0) { // if something happened we will handle the events we want
+
+			// create event buffer the size of how many Events
+			INPUT_RECORD* eventBuffer = new INPUT_RECORD[Events];
+
+			// fills the event buffer with the events and saves count in EventsRead
+			ReadConsoleInput(rhnd, eventBuffer, Events, &EventsRead);
+
+			// loop through the event buffer using the saved count
+			for (DWORD i = 0; i < EventsRead; ++i)
+			{
+
+				// check if event[i] is a key event && if so is a press not a release && a space was pressed
+				if (eventBuffer[i].EventType == KEY_EVENT && 
+					eventBuffer[i].Event.KeyEvent.bKeyDown &&
+					eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == VK_SPACE) 
+				{
+					menu();
+				}
+
+			} // end EventsRead loop
+			delete[] eventBuffer;
+		}
+
 		//check if data is waiting to be read
 		int size = test.ReadDataWaiting();
 		if(size)
@@ -131,4 +165,24 @@ int main()
 		//Delay to not use all the CPU checking for values that aren't sent yet
 		Sleep(10);
 	}
+}
+
+void menu()
+{
+
+}
+
+void setUpController()
+{
+
+}
+
+void continueRunning()
+{
+	
+}
+
+void exit()
+{
+
 }
