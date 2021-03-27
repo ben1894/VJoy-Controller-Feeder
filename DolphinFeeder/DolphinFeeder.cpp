@@ -9,33 +9,93 @@
 #include "vjoyinterface.h"
 #include <stdio.h>
 
+enum STATES
+{
+	RUNNING,
+	MENU,
+	EXIT
+};
+
 HANDLE hStdin;
 DWORD fdwSaveOldMode;
 
 const byte key = 255; 
 const int chunkSize = 5;
 
+STATES currentState = MENU;
+
 void menu();
 
 int main()
 {
+	//verify info
+	//state user input to retry or exit
+	std::cout << "Checking if VJoy is running and driver is correct...\n\n";
+	bool VJoyEnabled = false;
+	bool driverVerified = false;
+
+	while (!VJoyEnabled && !driverVerified)
+	{
+		if (!vJoyEnabled())
+		{
+			std::cout << "Please make sure VJoy is running.\n";
+		}
+		else
+		{
+			std::cout << "VJoy is running.\n";
+		}
+
+		WORD VerDll, VerDrv;
+		if (!DriverMatch(&VerDll, &VerDrv))
+			printf("Error - vJoy Driver (version %04x) does not match vJoyInterface DLL(version % 04x)\n\n", VerDrv, VerDll);
+		else
+			printf("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n\n", VerDrv);
+
+		char answer = 'y';
+		if (!VJoyEnabled || !driverVerified)
+		{
+			std::cout << "Retry? [y/n]: ";
+			std::cin >> answer;
+		}
+		if (answer == 'n')
+		{
+			return -1;
+		}
+		std::cout << "\n";
+	}
+	
+
+	if (currentState == MENU)
+	{
+		//Print Menu
+		//Wait for user input
+		//Bring Up Menu
+			//Add Controller
+			//Start Running / Continue Running
+			//Continue Running
+			//Remove Controller
+			//Edit Controller
+				//Change COM Port
+				//Change Name
+	}
+	else if (currentState == RUNNING)
+	{
+		//Clear screen
+		//Say press space to pause and bring up menu
+	}
+	else if (currentState == EXIT)
+	{
+		return 1;
+	}
+
+
+
 	HANDLE rhnd = GetStdHandle(STD_INPUT_HANDLE);  // handle to read console
 	DWORD Events = 0;     // Event count
 	DWORD EventsRead = 0; // Events read from console
 
-	if (!vJoyEnabled())
-	{
-		_tprintf(_T("Failed Getting vJoy attributes.\n"));
-		Sleep(1000);
-		return -2;
-	}
+	menu();
 
-	WORD VerDll, VerDrv;
-	if (!DriverMatch(&VerDll, &VerDrv))
-		_tprintf(_T("Failed\r\nvJoy Driver (version %04x) does not match vJoyInterface DLL(version % 04x)\n"), VerDrv ,VerDll);
-	else
-			_tprintf(_T("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n"), VerDrv);
-	
 	int iInterface = 1;
 	VjdStat status = GetVJDStatus(iInterface);
 
@@ -165,7 +225,7 @@ int main()
 		}
 
 		//Delay to not use all the CPU checking for values that aren't sent yet
-		Sleep(10);
+		Sleep(5);
 	}
 }
 
