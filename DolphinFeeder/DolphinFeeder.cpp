@@ -15,6 +15,8 @@ DWORD fdwSaveOldMode;
 const byte key = 255; 
 const int chunkSize = 5;
 
+void menu();
+
 int main()
 {
 	HANDLE rhnd = GetStdHandle(STD_INPUT_HANDLE);  // handle to read console
