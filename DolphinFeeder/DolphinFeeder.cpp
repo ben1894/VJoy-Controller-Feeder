@@ -1,5 +1,6 @@
 // DolphinFeeder.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+#define NOMINMAX
 #include <Windows.h>
 #include <iostream>
 #include <vector>
@@ -7,7 +8,12 @@
 #include "Serial.h"
 #include "public.h"
 #include "vjoyinterface.h"
+#include "easyinput.h"
 #include <stdio.h>
+
+#include <algorithm>
+#include <fstream>
+#include <string>
 
 enum STATES
 {
@@ -24,49 +30,89 @@ const int chunkSize = 5;
 
 STATES currentState = MENU;
 
+bool initialVerification();
 void menu();
+void clearScreen();
 
 int main()
 {
-	//verify info
-	//state user input to retry or exit
-	std::cout << "Checking if VJoy is running and driver is correct...\n\n";
-	bool VJoyEnabled = false;
-	bool driverVerified = false;
-
-	while (!VJoyEnabled && !driverVerified)
+	//If initial verification does not go well, exit
+	if (!initialVerification())
 	{
-		if (!vJoyEnabled())
-		{
-			std::cout << "Please make sure VJoy is running.\n";
-		}
-		else
-		{
-			std::cout << "VJoy is running.\n";
-		}
-
-		WORD VerDll, VerDrv;
-		if (!DriverMatch(&VerDll, &VerDrv))
-			printf("Error - vJoy Driver (version %04x) does not match vJoyInterface DLL(version % 04x)\n\n", VerDrv, VerDll);
-		else
-			printf("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n\n", VerDrv);
-
-		char answer = 'y';
-		if (!VJoyEnabled || !driverVerified)
-		{
-			std::cout << "Retry? [y/n]: ";
-			std::cin >> answer;
-		}
-		if (answer == 'n')
-		{
-			return -1;
-		}
-		std::cout << "\n";
+		return -1;
 	}
-	
+
+	std::vector<byte> receivedData;
 
 	if (currentState == MENU)
 	{
+		while (1)
+		{
+			std::cout << "Select Operation to Preform:\n";
+			std::cout <<
+				"[1] = Add Controller\n"
+				"[2] = Edit Controller\n"
+				"[3] = Remove Controller\n"
+				"[4] = Run\n"
+				"[5] = Exit\n"
+				"Selection:";
+			int option = 0;
+			int settingsOption = 0;
+			if (!cinNumber(option, 5))
+			{
+				option = -1;
+			}
+
+			clearScreen();
+			switch (option)
+			{
+			case 1:
+				addController();
+				break;
+			case 2:
+				break;
+			case 3:
+				break;
+			case 4:
+				break;
+			case 5:
+				break;
+			case 6:
+				std::cout << "Select Operation to Preform:\n";
+				std::cout <<
+					"[1] = Rename Class\n"
+					"[2] = Switch Class Order\n"
+					"[3] = Reset Class Homework\n"
+					"[4] = Reset All Homework\n"
+					"[5] = Reset All Data\n\n"
+					"Selection:";
+				if (!cinNumber(settingsOption, 5))
+				{
+					settingsOption = -1;
+				}
+				system("CLS");
+				switch (settingsOption)
+				{
+				case 1:
+					break;
+				case 2:
+					break;
+				case 3:
+					break;
+				case 4:
+					break;
+				case 5:
+					break;
+				default:
+					break;
+				}
+
+				break;
+			default:
+				break;
+			}
+			system("CLS");
+		}
 		//Print Menu
 		//Wait for user input
 		//Bring Up Menu
@@ -166,7 +212,7 @@ int main()
 					eventBuffer[i].Event.KeyEvent.bKeyDown &&
 					eventBuffer[i].Event.KeyEvent.wVirtualKeyCode == VK_SPACE) 
 				{
-					menu();
+					return;
 				}
 
 			} // end EventsRead loop
@@ -229,6 +275,45 @@ int main()
 	}
 }
 
+bool initialVerification()
+{
+	//verify info
+	//state user input to retry or exit
+	std::cout << "Checking if VJoy is running and driver is correct...\n\n";
+	bool VJoyEnabled = false;
+	bool driverVerified = false;
+
+	while (!VJoyEnabled && !driverVerified)
+	{
+		if (!vJoyEnabled())
+		{
+			std::cout << "Error - Please make sure VJoy is running.\n";
+		}
+		else
+		{
+			std::cout << "OK - VJoy is running.\n";
+		}
+
+		WORD VerDll, VerDrv;
+		if (!DriverMatch(&VerDll, &VerDrv))
+			printf("Error - vJoy Driver (version %04x) does not match vJoyInterface DLL(version % 04x)\n\n", VerDrv, VerDll);
+		else
+			printf("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n\n", VerDrv);
+
+		char answer = 'y';
+		if (!VJoyEnabled || !driverVerified)
+		{
+			std::cout << "Retry? [y/n]: ";
+			std::cin >> answer;
+		}
+		if (answer == 'n')
+		{
+			return 0;
+		}
+		std::cout << "\n";
+	}
+}
+
 void menu()
 {
 
@@ -247,4 +332,9 @@ void continueRunning()
 void exit()
 {
 
+}
+
+void clearScreen()
+{
+	std::cout << "\033[2J\033[1;1H";
 }

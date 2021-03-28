@@ -156,10 +156,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ControllerClass.cpp" />
     <ClCompile Include="DolphinFeeder.cpp" />
+    <ClCompile Include="EasyInput.cpp" />
     <ClCompile Include="Serial.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="controllerclass.h" />
+    <ClInclude Include="easyinput.h" />
     <ClInclude Include="public.h" />
     <ClInclude Include="Serial.h" />
     <ClInclude Include="vjoyinterface.h" />
