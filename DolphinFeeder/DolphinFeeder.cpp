@@ -9,11 +9,14 @@
 #include "public.h"
 #include "vjoyinterface.h"
 #include "easyinput.h"
+#include "Controller.h"
 #include <stdio.h>
 
 #include <algorithm>
 #include <fstream>
 #include <string>
+
+//class Controller;
 
 enum STATES
 {
@@ -29,6 +32,7 @@ const byte key = 255;
 const int chunkSize = 5;
 
 STATES currentState = MENU;
+std::vector<Controller> controllers;
 
 bool initialVerification();
 void menu();
@@ -41,8 +45,6 @@ int main()
 	{
 		return -1;
 	}
-
-	std::vector<byte> receivedData;
 
 	if (currentState == MENU)
 	{
@@ -319,9 +321,10 @@ void menu()
 
 }
 
-void setUpController()
+void addController()
 {
-
+	Controller test;
+	//controllers.push_back(test);
 }
 
 void continueRunning()

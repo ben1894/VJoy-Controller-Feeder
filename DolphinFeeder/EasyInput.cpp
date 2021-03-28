@@ -1,6 +1,6 @@
-#include "easyinput.h"
 #include <iostream>
 #include <string>
+#include "easyinput.h"
 
 bool cinInputValidation()
 {
