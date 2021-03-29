@@ -19,13 +19,14 @@ const int chunkSize = 5;
 
 class Controller
 {
+public:
 	std::vector<byte> receivedData;
+	std::string name = "";
 	int iInterface;
 	int nButtons;
 	CSerial serialPort;
 	JOYSTICK_POSITION_V2 iReport;
 
-public:
 	Controller()
 	{
 	}
@@ -96,10 +97,9 @@ public:
 			delete[]lpBuffer;
 		}
 
-		//search vector for first instance of key
+		int position = -1;
 		bool found = false;
-		int position = 0;
-		for (unsigned int i = 0; i < receivedData.size(); i++)
+		for (int i = receivedData.size() - chunkSize; i > 0; i--)
 		{
 			if (receivedData[i] == key)
 			{
@@ -109,10 +109,9 @@ public:
 			}
 		}
 
-		//if the 255 exist in the vector
-		//and all the bytes have been recieved (accounts for bytes already in buffer)
-		if (found && ((receivedData.size() - position) > chunkSize))
+		if (found)
 		{
+			//For debugging
 			/*for(unsigned int i = 0; i < receivedData.size(); i++)
 			{
 				std::cout << (int)receivedData[i] << ",";
@@ -120,13 +119,21 @@ public:
 			//std::cout << "\n";
 			//check if other all bytes have been received*/
 
-			//255, buttons, x100, x10, y100, y10
+			//Sending order
+			/*
+				EEBlue.write(255);
+				EEBlue.write(buttonStates);
+				EEBlue.write(x10);
+				EEBlue.write(x100);
+				EEBlue.write(y10);
+				EEBlue.write(y100);
+			*/
 			//iReport.lButtons |= (long)receivedData[position + 1]; //bit operations will be needed for more than 8 buttons
 			iReport.lButtons = receivedData[position + 1];
-			iReport.wAxisX = (receivedData[position + 2] * 100) + receivedData[position + 3];
-			iReport.wAxisY = (receivedData[position + 4] * 100) + receivedData[position + 5];
+			iReport.wAxisX = receivedData[position + 2] + (receivedData[position + 3] * 100);
+			iReport.wAxisY = receivedData[position + 4] + (receivedData[position + 5] * 100);
 
-			//erase values that were just read
+			//erase values that were just read and those before it too
 			receivedData.erase(receivedData.begin(), receivedData.begin() + position + chunkSize);
 
 			//update the dll

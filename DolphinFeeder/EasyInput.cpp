@@ -15,7 +15,6 @@ bool cinInputValidation()
 
 bool cinString(std::string& str, bool errorChecking)
 {
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::getline(std::cin, str);
 	if (errorChecking == true)
 	{
@@ -30,6 +29,7 @@ bool cinString(std::string& str, bool errorChecking)
 bool cinNumber(int& var, int numberCheck)
 {
 	std::cin >> var;
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	if (!cinInputValidation())
 	{
 		system("CLS");
@@ -50,6 +50,18 @@ bool cinNumber(int& var, int numberCheck)
 			system("pause");
 			return false;
 		}
+	}
+	return true;
+}
+
+bool retry()
+{
+	std::string option;
+	std::cout << "Retry? [y/n]: ";
+	cinString(option, false);
+	if (option == "n" || option == "no" || option == "N" || option == "No" || option == "NO" || option == "nope")
+	{
+		return false;
 	}
 	return true;
 }
