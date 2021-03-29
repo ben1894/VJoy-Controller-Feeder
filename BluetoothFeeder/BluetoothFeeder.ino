@@ -28,7 +28,9 @@ void setup()
   pinMode(6, INPUT_PULLUP);
   pinMode(7, INPUT_PULLUP);
   //Serial.begin(9600); //38400
-  EEBlue.begin(115200); 
+  //EEBlue.begin(115200); 
+  EEBlue.begin(57600); 
+
 }
 
 void loop()
@@ -49,17 +51,18 @@ void loop()
   y100 = yJoy / 100;
   y10 = yJoy - (y100 * 100);
    
-  EEBlue.write(255);
+  EEBlue.write((byte)255);
 
   EEBlue.write(buttonStates);
   
-  EEBlue.write(x10);
+  EEBlue.write((byte)x10);
   EEBlue.write(x100);
   EEBlue.write(y10);
   EEBlue.write(y100);
 
   buttonStates = 0;
-  delay(20);
+
+  delay(10);
 }
 
   /*uint16_t number = 5703;               // 0001 0110 0100 0111

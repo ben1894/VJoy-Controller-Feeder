@@ -26,7 +26,6 @@ public:
 	int nButtons;
 	int comNumber;
 	CSerial serialPort;
-	JOYSTICK_POSITION_V2 iReport;
 
 	Controller()
 	{
@@ -40,7 +39,7 @@ public:
 
 	int configureInterface(int newInterface)
 	{
-		int iInterface = newInterface;
+		iInterface = newInterface;
 		VjdStat status = GetVJDStatus(iInterface);
 
 		switch (status)
@@ -74,18 +73,17 @@ public:
 		}
 
 		nButtons = GetVJDButtonNumber(iInterface);
-		iReport.bDevice = iInterface;
 
 		return 1;
 	}
 
 	int configureSerialPort(int comPort)
 	{
-		if (serialPort.Open(comPort, 115200))
+		if (serialPort.Open(comPort, 57600))
 		{
 			comNumber = comPort;
 			serialPort.Close();
-			return 0;
+			return 1;
 		}
 		else
 		{
@@ -93,34 +91,31 @@ public:
 		}
 	}
 
-	void updateController()
+	void updateController(CSerial &serial)
 	{
-		int size = serialPort.ReadDataWaiting();
+		int size = serial.ReadDataWaiting();
 		std::cout << "\nsize" << size << "\n";
 
 		if (size > 0)
 		{
-			std::cout << "flag 1";
 			//store data to array
 			byte* lpBuffer = new byte[size];
-			int nBytesRead = serialPort.ReadData(lpBuffer, size);
-
-			std::cout << "flag 2";
-
+			int nBytesRead = serial.ReadData(lpBuffer, size);
 
 			//add data to full vector
 			receivedData.insert(receivedData.end(), &lpBuffer[0], &lpBuffer[size]);
-
-			std::cout << "flag 3";
-
 
 			delete[]lpBuffer;
 		}
 
 		int position = -1;
 		bool found = false;
-		for (int i = receivedData.size() - chunkSize; i > 0; i--)
+		for (int i = (receivedData.size() - chunkSize) - 1; i >= 0; i--)
 		{
+			for (int q = 0; q < receivedData.size(); q++)
+			{
+				std::cout << (int)receivedData[q] << " ";
+			}
 			if (receivedData[i] == key)
 			{
 				found = true;
@@ -128,8 +123,6 @@ public:
 				break;
 			}
 		}
-
-		std::cout << "Made it past 2";
 
 		if (found)
 		{
@@ -151,12 +144,19 @@ public:
 				EEBlue.write(y100);
 			*/
 			//iReport.lButtons |= (long)receivedData[position + 1]; //bit operations will be needed for more than 8 buttons
+			JOYSTICK_POSITION_V2 iReport;
+			iReport.bDevice = (BYTE)iInterface;
+
 			iReport.lButtons = receivedData[position + 1];
 			iReport.wAxisX = receivedData[position + 2] + (receivedData[position + 3] * 100);
 			iReport.wAxisY = receivedData[position + 4] + (receivedData[position + 5] * 100);
 
 			//erase values that were just read and those before it too
 			receivedData.erase(receivedData.begin(), receivedData.begin() + position + chunkSize);
+
+			//SetBtn(true, 1, 1);
+
+			std::cout<< "here" << iInterface << "Here";
 
 			//update the dll
 			UpdateVJD(iInterface, &iReport);

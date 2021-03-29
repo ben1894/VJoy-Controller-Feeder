@@ -168,21 +168,21 @@ int editController()
 
 int addController()
 {	
-	Controller temp;
+	Controller *temp = new Controller();
 	int configureState = 0;
 	bool breakInterfaceConfig = false;
 
 	while(!breakInterfaceConfig)
 	{
-		std::cout << "Please enter an interface number (1-12): ";
+		std::cout << "Please enter an interface number (1-16): ";
 		int interfaceEntered;
-		if(!cinNumber(interfaceEntered, 11))
+		if(!cinNumber(interfaceEntered, 16))
 		{
 			configureState = 0;
 		}
 		else
 		{
-			configureState = temp.configureInterface(interfaceEntered);
+			configureState = temp->configureInterface(interfaceEntered);
 		}
 
 		switch (configureState)
@@ -212,7 +212,7 @@ int addController()
 		}
 		else
 		{
-			if (temp.configureSerialPort(serialEntered) == 0)
+			if (temp->configureSerialPort(serialEntered) == -1)
 			{
 				printf("Unable to connect to COM port %d\n", serialEntered);
 				if (retry() == 0)
@@ -228,9 +228,9 @@ int addController()
 	}
 
 	std::cout << "\nEnter a name for this controller: ";
-	cinString(temp.name, false);
+	cinString(temp->name, false);
 
-	controllers.push_back(temp);
+	controllers.push_back(*temp);
 
 	return 1;
 	
@@ -256,10 +256,19 @@ int run()
 	std::cout << "Feeder is running\n";
 	std::cout << "Press space to pause and return to menu";
 
+	CSerial* ports = new CSerial[controllers.size()];
+
+	//std::cout << "controllers size: " << controllers.size() << "\n";
+
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		ports[i].Open(controllers[i].comNumber, 57600);
+		std::cout << "Com number: " << controllers[i].comNumber << "\n";
+	}
+
 	while (1)
 	{
-
-		GetNumberOfConsoleInputEvents(rhnd, &Events);
+			GetNumberOfConsoleInputEvents(rhnd, &Events);
 		if (Events != 0) { // if something happened we will handle the events we want
 
 			// create event buffer the size of how many Events
@@ -287,7 +296,7 @@ int run()
 		{
 			std::cout << controllers.size() << "\n";
 			std::cout << i;
-			controllers[i].updateController();
+			controllers[i].updateController(ports[i]);
 		}
 
 		Sleep(5);
