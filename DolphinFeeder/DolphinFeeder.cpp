@@ -256,16 +256,6 @@ int run()
 	std::cout << "Feeder is running\n";
 	std::cout << "Press space to pause and return to menu";
 
-	CSerial* ports = new CSerial[controllers.size()];
-
-	//std::cout << "controllers size: " << controllers.size() << "\n";
-
-	for (int i = 0; i < controllers.size(); i++)
-	{
-		ports[i].Open(controllers[i].comNumber, 57600);
-		std::cout << "Com number: " << controllers[i].comNumber << "\n";
-	}
-
 	while (1)
 	{
 			GetNumberOfConsoleInputEvents(rhnd, &Events);
@@ -294,9 +284,7 @@ int run()
 
 		for (int i = 0; i < controllers.size(); i++)
 		{
-			std::cout << controllers.size() << "\n";
-			std::cout << i;
-			controllers[i].updateController(ports[i]);
+			controllers[i].updateController();
 		}
 
 		Sleep(5);

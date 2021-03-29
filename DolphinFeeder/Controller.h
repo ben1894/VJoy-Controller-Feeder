@@ -82,7 +82,6 @@ public:
 		if (serialPort.Open(comPort, 57600))
 		{
 			comNumber = comPort;
-			serialPort.Close();
 			return 1;
 		}
 		else
@@ -91,16 +90,15 @@ public:
 		}
 	}
 
-	void updateController(CSerial &serial)
+	void updateController()
 	{
-		int size = serial.ReadDataWaiting();
-		std::cout << "\nsize" << size << "\n";
+		int size = serialPort.ReadDataWaiting();
 
 		if (size > 0)
 		{
 			//store data to array
 			byte* lpBuffer = new byte[size];
-			int nBytesRead = serial.ReadData(lpBuffer, size);
+			int nBytesRead = serialPort.ReadData(lpBuffer, size);
 
 			//add data to full vector
 			receivedData.insert(receivedData.end(), &lpBuffer[0], &lpBuffer[size]);
@@ -112,10 +110,10 @@ public:
 		bool found = false;
 		for (int i = (receivedData.size() - chunkSize) - 1; i >= 0; i--)
 		{
-			for (int q = 0; q < receivedData.size(); q++)
-			{
-				std::cout << (int)receivedData[q] << " ";
-			}
+			//for (int q = 0; q < receivedData.size(); q++)
+			//{
+			//	std::cout << (int)receivedData[q] << " ";
+			//}
 			if (receivedData[i] == key)
 			{
 				found = true;
@@ -153,10 +151,6 @@ public:
 
 			//erase values that were just read and those before it too
 			receivedData.erase(receivedData.begin(), receivedData.begin() + position + chunkSize);
-
-			//SetBtn(true, 1, 1);
-
-			std::cout<< "here" << iInterface << "Here";
 
 			//update the dll
 			UpdateVJD(iInterface, &iReport);
