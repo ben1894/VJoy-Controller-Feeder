@@ -44,9 +44,9 @@ int removeController();
 int main()
 {
 	//If initial verification does not go well, exit
-	//if (!initialVerification())
+	if (!initialVerification())
 	{
-		//return -1;
+		return -1;
 	}
 
 
@@ -110,13 +110,17 @@ bool initialVerification()
 		else
 		{
 			std::cout << "OK - VJoy is running.\n";
+			VJoyEnabled = true;
 		}
 
 		WORD VerDll, VerDrv;
 		if (!DriverMatch(&VerDll, &VerDrv))
 			printf("Error - vJoy Driver (version %04x) does not match vJoyInterface DLL(version % 04x)\n\n", VerDrv, VerDll);
 		else
+		{
 			printf("OK - vJoy Driver and vJoyInterface DLL match vJoyInterface DLL (version % 04x)\n\n", VerDrv);
+			driverVerified = true;
+		}
 
 		if (!VJoyEnabled || !driverVerified)
 		{
@@ -167,14 +171,19 @@ int addController()
 	Controller temp;
 	int configureState = 0;
 	bool breakInterfaceConfig = false;
+
 	while(!breakInterfaceConfig)
 	{
+		std::cout << "Please enter an interface number (1-12): ";
 		int interfaceEntered;
-		while(!cinNumber(interfaceEntered, 11))
+		if(!cinNumber(interfaceEntered, 11))
 		{
-			std::cout << "Please enter an interface 1-12";
+			configureState = 0;
 		}
-		configureState = temp.configureInterface(interfaceEntered);
+		else
+		{
+			configureState = temp.configureInterface(interfaceEntered);
+		}
 
 		switch (configureState)
 		{
@@ -192,13 +201,9 @@ int addController()
 	bool breakISerialConfig = false;
 	while (!breakISerialConfig)
 	{
+		std::cout << "\nPlease enter bluetooth COM port: ";
 		int serialEntered;
-		while (!cinNumber(serialEntered, 256))
-		{
-			std::cout << "Please enter an COM port 0-256";
-		}
-
-		if (temp.configureInterface(serialEntered) == 0)
+		if(!cinNumber(serialEntered, 256))
 		{
 			if (retry() == 0)
 			{
@@ -207,11 +212,22 @@ int addController()
 		}
 		else
 		{
-			breakISerialConfig = true;
+			if (temp.configureSerialPort(serialEntered) == 0)
+			{
+				printf("Unable to connect to COM port %d\n", serialEntered);
+				if (retry() == 0)
+				{
+					return -1;
+				}
+			}
+			else
+			{
+				breakISerialConfig = true;
+			}
 		}
 	}
 
-	std::cout << "Enter a name for this controller: ";
+	std::cout << "\nEnter a name for this controller: ";
 	cinString(temp.name, false);
 
 	controllers.push_back(temp);
@@ -237,7 +253,8 @@ int run()
 		return -1;
 	}
 
-	
+	std::cout << "Feeder is running\n";
+	std::cout << "Press space to pause and return to menu";
 
 	while (1)
 	{
@@ -268,6 +285,8 @@ int run()
 
 		for (int i = 0; i < controllers.size(); i++)
 		{
+			std::cout << controllers.size() << "\n";
+			std::cout << i;
 			controllers[i].updateController();
 		}
 

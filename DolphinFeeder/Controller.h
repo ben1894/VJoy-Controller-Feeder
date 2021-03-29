@@ -24,6 +24,7 @@ public:
 	std::string name = "";
 	int iInterface;
 	int nButtons;
+	int comNumber;
 	CSerial serialPort;
 	JOYSTICK_POSITION_V2 iReport;
 
@@ -34,6 +35,7 @@ public:
 	~Controller()
 	{
 		RelinquishVJD(iInterface);
+		serialPort.Close();
 	}
 
 	int configureInterface(int newInterface)
@@ -79,20 +81,38 @@ public:
 
 	int configureSerialPort(int comPort)
 	{
-		return serialPort.Open(4, 9600);
+		if (serialPort.Open(comPort, 115200))
+		{
+			comNumber = comPort;
+			serialPort.Close();
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
 	}
 
 	void updateController()
 	{
 		int size = serialPort.ReadDataWaiting();
-		if (size)
+		std::cout << "\nsize" << size << "\n";
+
+		if (size > 0)
 		{
+			std::cout << "flag 1";
 			//store data to array
 			byte* lpBuffer = new byte[size];
 			int nBytesRead = serialPort.ReadData(lpBuffer, size);
 
+			std::cout << "flag 2";
+
+
 			//add data to full vector
 			receivedData.insert(receivedData.end(), &lpBuffer[0], &lpBuffer[size]);
+
+			std::cout << "flag 3";
+
 
 			delete[]lpBuffer;
 		}
@@ -108,6 +128,8 @@ public:
 				break;
 			}
 		}
+
+		std::cout << "Made it past 2";
 
 		if (found)
 		{
