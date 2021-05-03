@@ -39,6 +39,7 @@ int editController();
 int addController();
 int run();
 int removeController();
+int changeComPort();
 
 
 int main()
@@ -146,18 +147,13 @@ int editController()
 	{
 		option = -1;
 	}
-	system("CLS");
+	clearScreen();
 	switch (option)
 	{
 	case 1:
+		changeComPort();
 		break;
 	case 2:
-		break;
-	case 3:
-		break;
-	case 4:
-		break;
-	case 5:
 		break;
 	default:
 		break;
@@ -254,11 +250,11 @@ int run()
 	}
 
 	std::cout << "Feeder is running\n";
-	std::cout << "Press space to pause and return to menu";
+	std::cout << "Press space to pause and return to menu\n\n";
 
 	while (1)
 	{
-			GetNumberOfConsoleInputEvents(rhnd, &Events);
+		GetNumberOfConsoleInputEvents(rhnd, &Events);
 		if (Events != 0) { // if something happened we will handle the events we want
 
 			// create event buffer the size of how many Events
@@ -313,6 +309,37 @@ int removeController()
 	}
 
 	controllers.erase(controllers.begin() + (controllerToRemoveIndex - 1));
+
+	return 1;
+}
+
+int setComPort(Controller *controller)
+{
+
+}
+
+int changeComPort()
+{
+	if (controllers.empty())
+	{
+		clearScreen();
+		std::cout << "Please add a controller to remove first. \n";
+		system("pause");
+		return -1;
+	}
+
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		std::cout << i + 1 << ". " << controllers[i].name << "\n";
+	}
+
+	int controllerToEdit;
+	if (!cinNumber(controllerToEdit, controllers.size()))
+	{
+		return -1;
+	}
+
+	controllers[controllerToEdit - 1].configureSerialPort();
 
 	return 1;
 }

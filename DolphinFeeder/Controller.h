@@ -3,45 +3,48 @@
 #include <Windows.h>
 #include <iostream>
 #include <vector>
-#include "tchar.h"
 #include "Serial.h"
 #include "public.h"
 #include "vjoyinterface.h"
 #include "easyinput.h"
-#include <stdio.h>
-
-#include <algorithm>
-#include <fstream>
 #include <string>
 
-const byte key = 255;
-const int chunkSize = 5;
+const byte key = 255; //Signals the start and end of data being sent
+const int chunkSize = 5; //Number of bytes being sent
 
+/*
+	The controller class manages the creation and editing of controllers 
+	to feed to the driver
+*/
 class Controller
 {
 public:
-	std::vector<byte> receivedData;
-	std::string name = "";
-	int iInterface;
-	int nButtons;
-	int comNumber;
-	CSerial serialPort;
+	std::vector<byte> receivedData; //Received data buffer
+	std::string name = ""; //Name of the controller
+	int iInterface; //VJoy interface number for controller
+	int nButtons; //Number of buttons being controlled
+	int comNumber; //Com port number
+	CSerial serialPort; //Serial port object
 
 	Controller()
 	{
 	}
 
+	//Relinquishes the device on the controller's interface and closes the 
+	//sertial port associated with the controller
 	~Controller()
 	{
 		RelinquishVJD(iInterface);
 		serialPort.Close();
 	}
 
+	//Goes through all the steps needed to set up a controller with the dll
 	int configureInterface(int newInterface)
 	{
 		iInterface = newInterface;
 		VjdStat status = GetVJDStatus(iInterface);
 
+		//Makes sure the status of the device on the given interface is free
 		switch (status)
 		{
 		case VJD_STAT_OWN:
@@ -77,6 +80,7 @@ public:
 		return 1;
 	}
 
+	//Opens a serial port with a given comPort
 	int configureSerialPort(int comPort)
 	{
 		if (serialPort.Open(comPort, 57600))
@@ -90,10 +94,12 @@ public:
 		}
 	}
 
+	//Updates the values of the device on the interface
 	void updateController()
 	{
-		int size = serialPort.ReadDataWaiting();
+		int size = serialPort.ReadDataWaiting(); //Number of bytes waiting
 
+		//Makes sure there are bytes waiting to be read from the com port
 		if (size > 0)
 		{
 			//store data to array
@@ -106,6 +112,7 @@ public:
 			delete[]lpBuffer;
 		}
 
+		//Attempts to find the key in the receivedData vector
 		int position = -1;
 		bool found = false;
 		for (int i = (receivedData.size() - chunkSize) - 1; i >= 0; i--)
@@ -130,7 +137,6 @@ public:
 				std::cout << (int)receivedData[i] << ",";
 			}
 			//std::cout << "\n";
-			//check if other all bytes have been received*/
 
 			//Sending order
 			/*
@@ -142,7 +148,7 @@ public:
 				EEBlue.write(y100);
 			*/
 			//iReport.lButtons |= (long)receivedData[position + 1]; //bit operations will be needed for more than 8 buttons
-			JOYSTICK_POSITION_V2 iReport;
+			JOYSTICK_POSITION_V2 iReport; //Can store all the data of a device
 			iReport.bDevice = (BYTE)iInterface;
 
 			iReport.lButtons = receivedData[position + 1];
