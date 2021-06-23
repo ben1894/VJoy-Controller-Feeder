@@ -80,6 +80,38 @@ public:
 		return 1;
 	}
 
+	int managedPortOpen()
+	{
+		bool breakISerialConfig = false;
+		while (!breakISerialConfig)
+		{ 
+			std::cout << "\nPlease enter bluetooth COM port: ";
+			int serialEntered;
+			if (!cinNumber(serialEntered, 256))
+			{
+				if (retry() == 0)
+				{
+					return -1;
+				}
+			}
+			else
+			{
+				if (this->configureSerialPort(serialEntered) == -1)
+				{
+					printf("Unable to connect to COM port %d\n", serialEntered);
+					if (retry() == 0)
+					{
+						return -1;
+					}
+				}
+				else
+				{
+					breakISerialConfig = true;
+				}
+			}
+		}
+	}
+
 	//Opens a serial port with a given comPort
 	int configureSerialPort(int comPort)
 	{
@@ -140,9 +172,10 @@ public:
 
 			//Sending order
 			/*
-				EEBlue.write(255);
-				EEBlue.write(buttonStates);
-				EEBlue.write(x10);
+				EEBlue.write(255); //key
+				EEBlue.write((byte)(buttonStates >> 8));
+				EEBlue.write((byte)buttonStates);				
+				EEBlue.write(x10); 
 				EEBlue.write(x100);
 				EEBlue.write(y10);
 				EEBlue.write(y100);
@@ -151,9 +184,11 @@ public:
 			JOYSTICK_POSITION_V2 iReport; //Can store all the data of a device
 			iReport.bDevice = (BYTE)iInterface;
 
-			iReport.lButtons = receivedData[position + 1];
-			iReport.wAxisX = receivedData[position + 2] + (receivedData[position + 3] * 100);
-			iReport.wAxisY = receivedData[position + 4] + (receivedData[position + 5] * 100);
+			//Recieves the extended buttons first, casts them int a 16 bit data type, shifts them 8 positions then adds the first button group
+			iReport.lButtons = (((uint_fast16_t)receivedData[position + 1]) << 8) | receivedData[position + 2];
+
+			iReport.wAxisX = receivedData[position + 3] + (receivedData[position + 4] * 100);
+			iReport.wAxisY = receivedData[position + 5] + (receivedData[position + 6] * 100);
 
 			//erase values that were just read and those before it too
 			receivedData.erase(receivedData.begin(), receivedData.begin() + position + chunkSize);

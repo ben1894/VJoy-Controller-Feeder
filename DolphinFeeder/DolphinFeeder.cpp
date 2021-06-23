@@ -1,5 +1,3 @@
-// DolphinFeeder.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 #define NOMINMAX
 #include <Windows.h>
 #include <iostream>
@@ -166,8 +164,8 @@ int addController()
 {	
 	Controller *temp = new Controller();
 	int configureState = 0;
+	
 	bool breakInterfaceConfig = false;
-
 	while(!breakInterfaceConfig)
 	{
 		std::cout << "Please enter an interface number (1-16): ";
@@ -194,34 +192,7 @@ int addController()
 		}
 	}
 
-	bool breakISerialConfig = false;
-	while (!breakISerialConfig)
-	{
-		std::cout << "\nPlease enter bluetooth COM port: ";
-		int serialEntered;
-		if(!cinNumber(serialEntered, 256))
-		{
-			if (retry() == 0)
-			{
-				return -1;
-			}
-		}
-		else
-		{
-			if (temp->configureSerialPort(serialEntered) == -1)
-			{
-				printf("Unable to connect to COM port %d\n", serialEntered);
-				if (retry() == 0)
-				{
-					return -1;
-				}
-			}
-			else
-			{
-				breakISerialConfig = true;
-			}
-		}
-	}
+	temp->managedPortOpen();
 
 	std::cout << "\nEnter a name for this controller: ";
 	cinString(temp->name, false);
@@ -307,15 +278,10 @@ int removeController()
 	{
 		return -1;
 	}
-
+	
 	controllers.erase(controllers.begin() + (controllerToRemoveIndex - 1));
 
 	return 1;
-}
-
-int setComPort(Controller *controller)
-{
-
 }
 
 int changeComPort()
@@ -328,18 +294,25 @@ int changeComPort()
 		return -1;
 	}
 
+	//Prints the controller names
 	for (int i = 0; i < controllers.size(); i++)
 	{
 		std::cout << i + 1 << ". " << controllers[i].name << "\n";
 	}
 
+	//Select the controller to edit
 	int controllerToEdit;
 	if (!cinNumber(controllerToEdit, controllers.size()))
 	{
 		return -1;
 	}
 
-	controllers[controllerToEdit - 1].configureSerialPort();
+	//Close the current serial port
+	controllers[controllerToEdit - 1].serialPort.Close();
+
+	//if this fails then the port remains closed, might cause problems trying to read from it later.
+	//Sort through them before 
+	controllers[controllerToEdit - 1].managedPortOpen();
 
 	return 1;
 }
