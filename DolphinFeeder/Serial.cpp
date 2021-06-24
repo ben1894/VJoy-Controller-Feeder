@@ -1,6 +1,3 @@
-// Serial.cpp
-
-//#include "stdafx.h"
 #include <tchar.h>
 #include <Windows.h>
 #include "Serial.h"

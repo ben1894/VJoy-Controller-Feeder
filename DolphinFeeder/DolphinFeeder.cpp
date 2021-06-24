@@ -20,6 +20,7 @@ int main();
 
 bool initialVerification();
 void clearScreen();
+void fullPrint();
 int editController();
 int addController();
 int run();
@@ -250,6 +251,8 @@ int run()
 		}
 	}
 
+	fullPrint();
+
 	while (1)
 	{
 		GetNumberOfConsoleInputEvents(rhnd, &Events);
@@ -296,12 +299,9 @@ int removeController()
 		return -1;
 	}
 
-	for(int i = 0; i < controllers.size(); i++)
-	{
-		std::cout << i + 1 << ". " << controllers[i].name << "\n";
-	}
+	fullPrint();
 
-	std::cout << "Selection: ";
+	std::cout << "\nSelection: ";
 
 	int controllerToRemoveIndex;
 	if(!cinNumber(controllerToRemoveIndex, controllers.size()))
@@ -324,13 +324,9 @@ int changeComPort()
 		return -1;
 	}
 
-	//Prints the controller names
-	for(int i = 0; i < controllers.size(); i++)
-	{
-		std::cout << i + 1 << ". " << controllers[i].name << "\n";
-	}
+	fullPrint();
 
-	std::cout << "Selection: ";
+	std::cout << "\nSelection: ";
 
 	//Select the controller to edit
 	int controllerToEdit;
@@ -352,26 +348,15 @@ int changeComPort()
 
 int pauseController()
 {
+	std::cout << "#    Name            Com Port    State\n";
 	int actualIndex = 0;
 	for (int i = 0; i < controllers.size(); i++)
 	{
 		STATE controllerState = controllers[i].state;
 		if (controllerState == ACTIVE)
 		{
-			std::cout << actualIndex + 1 << ". " << controllers[i].name << ", Active\n";
+			printf("%d.   %-16s%-12dActive", actualIndex + 1, controllers[i].name.c_str(), controllers[i].comNumber);
 			actualIndex++;
-		}
-		else
-		{
-			std::cout << "   " << controllers[i].name;
-			if (controllerState == INVALIDPORT)
-			{
-				std::cout << ", Disconnected on " << controllers[i].comNumber << "\n";
-			}
-			else if (controllerState == PAUSED)
-			{
-				std::cout << ", Paused on " << controllers[i].comNumber << "\n";
-			}
 		}
 	}
 
@@ -411,26 +396,24 @@ int pauseController()
 
 int resumeController()
 {
+	std::cout << "#    Name            Com Port    State\n";
 	int actualIndex = 0;
 	for (int i = 0; i < controllers.size(); i++)
 	{
 		STATE controllerState = controllers[i].state;
 		if (controllerState != ACTIVE)
 		{
-			std::cout << actualIndex + 1 << ". " << controllers[i].name;
+			printf("%d.   %-16s%-12d", actualIndex + 1, controllers[i].name.c_str(), controllers[i].comNumber);
 			if (controllerState == INVALIDPORT)
 			{
-				std::cout << ", Disconnected on " << controllers[i].comNumber << "\n";
+				std::cout << "Disconnected";
 			}
 			else if (controllerState == PAUSED)
 			{
-				std::cout << ", Paused on " << controllers[i].comNumber << "\n";
+				std::cout << "Paused";
 			}
+			std::cout << "\n";
 			actualIndex++;
-		}
-		else
-		{
-			std::cout << "   " << controllers[i].name << ", Active\n";
 		}
 	}
 
@@ -442,7 +425,7 @@ int resumeController()
 		return -2;
 	}
 
-	std::cout << "Selection: ";
+	std::cout << "\nSelection: ";
 
 	int controllerToPauseIndex;
 	if (!cinNumber(controllerToPauseIndex, actualIndex))
@@ -501,24 +484,7 @@ int resumeController()
 
 int controllerInfo()
 {
-	std::cout << "#\tName\t\tComPort\tState\n";
-	for (int i = 0; i < controllers.size(); i++)
-	{
-		std::cout << i << ".\t" << controllers[i].name << "\t" << controllers[i].comNumber << "\t";
-		switch (controllers[i].state)
-		{
-		case ACTIVE:
-			std::cout << "Active";
-			break;
-		case PAUSED:
-			std::cout << "Paused";
-			break;
-		case INVALIDPORT:
-			std::cout << "Disconnected";
-			break;
-		}
-		std::cout << "\n";
-	}
+	fullPrint();
 
 	std::cout << "\n";
 	system("pause");
@@ -542,12 +508,9 @@ int changeControllerName()
 		return -1;
 	}
 
-	for (int i = 0; i < controllers.size(); i++)
-	{
-		std::cout << i + 1 << ". " << controllers[i].name << "\n";
-	}
+	fullPrint();
 
-	std::cout << "Selection: ";
+	std::cout << "\nSelection: ";
 
 	int controllerToRenameIndex;
 	if (!cinNumber(controllerToRenameIndex, controllers.size()))
@@ -559,6 +522,28 @@ int changeControllerName()
 	cinString(controllers[controllerToRenameIndex].name, false);
 
 	return 1;
+}
+
+void fullPrint()
+{
+	std::cout << "#    Name            Com Port    State\n";
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		printf("%d.   %-16s%-12d", i, controllers[i].name.c_str(), controllers[i].comNumber);
+		switch (controllers[i].state)
+		{
+		case ACTIVE:
+			std::cout << "Active";
+			break;
+		case PAUSED:
+			std::cout << "Paused";
+			break;
+		case INVALIDPORT:
+			std::cout << "Disconnected";
+			break;
+		}
+		std::cout << "\n";
+	}
 }
 
 void clearScreen()
