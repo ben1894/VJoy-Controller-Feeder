@@ -12,6 +12,12 @@
 const byte key = 255; //Signals the start and end of data being sent
 const int chunkSize = 5; //Number of bytes being sent
 
+enum STATE
+{
+	ACTIVE,
+	PAUSED,
+	INVALIDPORT
+};
 /*
 	The controller class manages the creation and editing of controllers 
 	to feed to the driver
@@ -22,9 +28,9 @@ public:
 	std::vector<byte> receivedData; //Received data buffer
 	std::string name = ""; //Name of the controller
 	int iInterface; //VJoy interface number for controller
-	int nButtons; //Number of buttons being controlled
 	int comNumber; //Com port number
 	CSerial serialPort; //Serial port object
+	STATE state;
 
 	Controller()
 	{
@@ -75,17 +81,16 @@ public:
 			printf("Acquired: vJoy device number %d.\n", iInterface);
 		}
 
-		nButtons = GetVJDButtonNumber(iInterface);
-
 		return 1;
 	}
 
 	int managedPortOpen()
 	{
-		bool breakISerialConfig = false;
-		while (!breakISerialConfig)
+		while (1)
 		{ 
 			std::cout << "\nPlease enter bluetooth COM port: ";
+			
+			//Makes sure the entered number is valid and the user wants to try again
 			int serialEntered;
 			if (!cinNumber(serialEntered, 256))
 			{
@@ -106,7 +111,7 @@ public:
 				}
 				else
 				{
-					breakISerialConfig = true;
+					return 1;
 				}
 			}
 		}
@@ -118,10 +123,12 @@ public:
 		if (serialPort.Open(comPort, 57600))
 		{
 			comNumber = comPort;
+			state = ACTIVE;
 			return 1;
 		}
 		else
 		{
+			state = INVALIDPORT;
 			return -1;
 		}
 	}

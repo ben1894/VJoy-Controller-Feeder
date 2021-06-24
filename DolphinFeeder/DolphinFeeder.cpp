@@ -14,19 +14,6 @@
 #include <fstream>
 #include <string>
 
-//class Controller;
-
-enum STATES
-{
-	RUNNING,
-	MENU,
-	EXIT
-};
-
-HANDLE hStdin;
-DWORD fdwSaveOldMode;
-
-STATES currentState = MENU;
 std::vector<Controller> controllers;
 
 int main();
@@ -38,7 +25,9 @@ int addController();
 int run();
 int removeController();
 int changeComPort();
-
+int pauseController();
+int changeControllerName();
+int resumeController();
 
 int main()
 {
@@ -139,9 +128,11 @@ int editController()
 	std::cout << "Select Operation to Preform:\n";
 	std::cout <<
 		"[1] = Change COM Port\n"
-		"[2] = Edit Name\n\n"
+		"[2] = Pause Controller\n"
+		"[3] = Resume Controller\n"
+		"[4] = Edit Name\n\n"
 		"Selection:";
-	if (!cinNumber(option, 2))
+	if (!cinNumber(option, 3))
 	{
 		option = -1;
 	}
@@ -152,6 +143,13 @@ int editController()
 		changeComPort();
 		break;
 	case 2:
+		pauseController();
+		break;
+	case 3:
+		resumeController();
+		break;
+	case 4:
+		changeControllerName();
 		break;
 	default:
 		break;
@@ -197,8 +195,9 @@ int addController()
 	std::cout << "\nEnter a name for this controller: ";
 	cinString(temp->name, false);
 
-	controllers.push_back(*temp);
+	temp->state = ACTIVE;
 
+	controllers.push_back(*temp);
 	return 1;
 	
 	//-1 try again with different iinterface
@@ -222,6 +221,15 @@ int run()
 
 	std::cout << "Feeder is running\n";
 	std::cout << "Press space to pause and return to menu\n\n";
+
+	std::vector<Controller*> activeControllers;
+	for(int i = 0; i < controllers.size(); i++)
+	{
+		if(controllers[i].state == ACTIVE)
+		{
+			activeControllers.push_back(&controllers[i]);
+		}
+	}
 
 	while (1)
 	{
@@ -249,9 +257,10 @@ int run()
 			delete[] eventBuffer;
 		}
 
-		for (int i = 0; i < controllers.size(); i++)
+		//Update the controllers
+		for (int i = 0; i < activeControllers.size(); i++)
 		{
-			controllers[i].updateController();
+			activeControllers[i]->updateController();
 		}
 
 		Sleep(5);
@@ -260,7 +269,7 @@ int run()
 
 int removeController()
 {
-	if (controllers.empty())
+	if(controllers.empty())
 	{
 		clearScreen();
 		std::cout << "Please add a controller to remove first. \n";
@@ -268,13 +277,13 @@ int removeController()
 		return -1;
 	}
 
-	for (int i = 0; i < controllers.size(); i++)
+	for(int i = 0; i < controllers.size(); i++)
 	{
 		std::cout << i + 1 << ". " << controllers[i].name << "\n";
 	}
 
 	int controllerToRemoveIndex;
-	if (!cinNumber(controllerToRemoveIndex, controllers.size()))
+	if(!cinNumber(controllerToRemoveIndex, controllers.size()))
 	{
 		return -1;
 	}
@@ -286,7 +295,7 @@ int removeController()
 
 int changeComPort()
 {
-	if (controllers.empty())
+	if(controllers.empty())
 	{
 		clearScreen();
 		std::cout << "Please add a controller to remove first. \n";
@@ -295,14 +304,14 @@ int changeComPort()
 	}
 
 	//Prints the controller names
-	for (int i = 0; i < controllers.size(); i++)
+	for(int i = 0; i < controllers.size(); i++)
 	{
 		std::cout << i + 1 << ". " << controllers[i].name << "\n";
 	}
 
 	//Select the controller to edit
 	int controllerToEdit;
-	if (!cinNumber(controllerToEdit, controllers.size()))
+	if(!cinNumber(controllerToEdit, controllers.size()))
 	{
 		return -1;
 	}
@@ -310,10 +319,193 @@ int changeComPort()
 	//Close the current serial port
 	controllers[controllerToEdit - 1].serialPort.Close();
 
-	//if this fails then the port remains closed, might cause problems trying to read from it later.
-	//Sort through them before 
-	controllers[controllerToEdit - 1].managedPortOpen();
+	if(controllers[controllerToEdit - 1].managedPortOpen() != 1)
+	{
+		controllers[controllerToEdit - 1].state = INVALIDPORT;
+	}
 
+	return 1;
+}
+
+int pauseController()
+{
+	int actualIndex = 0;
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		STATE controllerState = controllers[i].state;
+		if (controllerState != ACTIVE)
+		{
+			std::cout << actualIndex + 1 << ". " << controllers[i].name;
+			if (controllerState == INVALIDPORT)
+			{
+				std::cout << ", Disconnected\n";
+			}
+			else if (controllerState == PAUSED)
+			{
+				std::cout << ", Paused\n";
+			}
+			actualIndex++;
+		}
+		else
+		{
+			std::cout << "   " << controllers[i].name << "\n";
+		}
+	}
+
+	//No controllers are active
+	if (actualIndex == 0)
+	{
+		std::cout << "No active controllers";
+		system("pause");
+		return -2;
+	}
+
+	int controllerToPauseIndex;
+	if (!cinNumber(controllerToPauseIndex, actualIndex))
+	{
+		return -1;
+	}
+
+	int convertedIndex = 0;
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		STATE controllerState = controllers[i].state;
+		if (controllerState != ACTIVE)
+		{
+			if (convertedIndex == controllerToPauseIndex)
+			{
+				if (controllerState == PAUSED)
+				{
+					controllers[i].state = ACTIVE;
+					return 1;
+				}
+				else if (controllerState == INVALIDPORT)
+				{
+					std::cout << "Retry connection on port " << controllers[i].comNumber << "? [y/n]:";
+					std::string retryResponse;
+					cinString(retryResponse, false);
+					if (retryResponse == "y" || retryResponse == "Y" || retryResponse == "yes" || retryResponse == "Yes" || retryResponse == "YES")
+					{
+						while (1)
+						{
+							if (controllers[i].configureSerialPort(controllers[i].comNumber) == -1)
+							{
+								printf("Unable to connect to COM port %d\n", controllers[i].comNumber);
+								if (retry() == 0)
+								{
+									return -1;
+								}
+							}
+							else
+							{
+								return 1;
+							}
+						}
+					}
+					else
+					{
+						return controllers[i].managedPortOpen();
+					}
+				}
+			}
+			convertedIndex++;
+		}
+	}
+
+	return -1;
+
+}
+
+int resumeController()
+{
+	int actualIndex = 0;
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		STATE controllerState = controllers[i].state;
+		if (controllerState != ACTIVE)
+		{
+			std::cout << actualIndex + 1 << ". " << controllers[i].name;
+			if (controllerState == INVALIDPORT)
+			{
+				std::cout << ", Disconnected\n";
+			}
+			else if(controllerState == PAUSED)
+			{
+				std::cout << ", Paused\n";
+			}
+			actualIndex++;
+		}
+		else
+		{
+			std::cout << "   " << controllers[i].name << "\n";
+		}
+	}
+
+	//No controllers are active
+	if (actualIndex == 0)
+	{
+		std::cout << "No active controllers";
+		system("pause");
+		return -2;
+	}
+
+	int controllerToPauseIndex;
+	if (!cinNumber(controllerToPauseIndex, actualIndex))
+	{
+		return -1;
+	}
+
+	int convertedIndex = 0;
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		STATE controllerState = controllers[i].state;
+		if (controllerState != ACTIVE)
+		{
+			if (convertedIndex == controllerToPauseIndex)
+			{
+				if (controllerState == PAUSED)
+				{
+					controllers[i].state = ACTIVE;
+					return 1;
+				}
+				else if (controllerState == INVALIDPORT)
+				{
+					std::cout << "Retry connection on port " << controllers[i].comNumber << "? [y/n]:";
+					std::string retryResponse;
+					cinString(retryResponse, false);
+					if (retryResponse == "y" || retryResponse == "Y" || retryResponse == "yes" || retryResponse == "Yes" || retryResponse == "YES")
+					{
+						while (1)
+						{
+							if (controllers[i].configureSerialPort(controllers[i].comNumber) == -1)
+							{
+								printf("Unable to connect to COM port %d\n", controllers[i].comNumber);
+								if (retry() == 0)
+								{
+									return -1;
+								}
+							}
+							else
+							{
+								return 1;
+							}
+						}
+					}
+					else
+					{
+						return controllers[i].managedPortOpen();
+					}
+				}
+			}
+			convertedIndex++;
+		}
+	}
+
+	return -1;
+}
+
+int changeControllerName()
+{
 	return 1;
 }
 
