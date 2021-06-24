@@ -120,9 +120,10 @@ public:
 	//Opens a serial port with a given comPort
 	int configureSerialPort(int comPort)
 	{
+		comNumber = comPort;
+
 		if (serialPort.Open(comPort, 57600))
 		{
-			comNumber = comPort;
 			state = ACTIVE;
 			return 1;
 		}

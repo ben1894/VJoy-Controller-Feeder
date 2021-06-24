@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 SoftwareSerial EEBlue(10, 11); // RX | TX
 
-unsigned int buttonStates = 0;
+unsigned int buttonStates = 0; //Support for 16 buttons
 
 byte x100;
 byte x10;
@@ -13,14 +13,6 @@ int yJoy;
 
 int buttonArray[] = {5,6,7};
 int numOfButtons = sizeof(buttonArray)/sizeof(buttonArray[0]);
-
-//0000 0001
-//0000 0000 || = 1
-//0000 0001
-
-//0000 0001
-//0000 0001 && = 0
-//0000 0000
 
 void setup()
 {
@@ -53,8 +45,8 @@ void loop()
    
   EEBlue.write((byte)255);
 
+  EEBlue.write((byte)(buttonStates >> 8));  
   EEBlue.write((byte)buttonStates);
-  EEBlue.write((byte)(buttonStates >> 8));
   
   EEBlue.write((byte)x10);
   EEBlue.write(x100);
@@ -65,11 +57,3 @@ void loop()
 
   delay(10);
 }
-
-  /*uint16_t number = 5703;               // 0001 0110 0100 0111
-  uint16_t mask = B11111111;          // 0000 0000 1111 1111
-  uint8_t first_half = number >> 8;   // >>>> >>>> 0001 0110
-  uint8_t sencond_half = number & mask; // ____ ____ 0100 0111
-
-  Serial.write(first_half);
-  Serial.write(sencond_half);*/
