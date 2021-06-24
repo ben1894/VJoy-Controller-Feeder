@@ -2,17 +2,11 @@
 #include <Windows.h>
 #include <iostream>
 #include <vector>
-#include "tchar.h"
 #include "Serial.h"
 #include "public.h"
 #include "vjoyinterface.h"
 #include "easyinput.h"
 #include "Controller.h"
-#include <stdio.h>
-
-#include <algorithm>
-#include <fstream>
-#include <string>
 
 std::vector<Controller> controllers;
 
@@ -21,6 +15,7 @@ int main();
 bool initialVerification();
 void clearScreen();
 void fullPrint();
+void printNoNumbers();
 int editController();
 int addController();
 int run();
@@ -251,7 +246,7 @@ int run()
 		}
 	}
 
-	fullPrint();
+	printNoNumbers();
 
 	while (1)
 	{
@@ -484,8 +479,7 @@ int resumeController()
 
 int controllerInfo()
 {
-	fullPrint();
-
+	printNoNumbers();
 	std::cout << "\n";
 	system("pause");
 	return 1;
@@ -494,7 +488,10 @@ int controllerInfo()
 int about()
 {
 	std::cout << "All code was made by Ben Drees save for the CSerial and VJoy libraries\n\n"
-			  << "If anyone has found this useful consider buying with a coffee :) ";
+			  << "If anyone has found this useful consider I'm not above taking tips :P \n"
+		      << "bc1qlgl2xm8fdm4077m827c6lymv7c2x4r9088rpuz\n\n";
+
+	system("pause");
 	return 1;
 }
 
@@ -529,7 +526,29 @@ void fullPrint()
 	std::cout << "#    Name            Com Port    State\n";
 	for (int i = 0; i < controllers.size(); i++)
 	{
-		printf("%d.   %-16s%-12d", i, controllers[i].name.c_str(), controllers[i].comNumber);
+		printf("%d.   %-16s%-12d", i + 1, controllers[i].name.c_str(), controllers[i].comNumber);
+		switch (controllers[i].state)
+		{
+		case ACTIVE:
+			std::cout << "Active";
+			break;
+		case PAUSED:
+			std::cout << "Paused";
+			break;
+		case INVALIDPORT:
+			std::cout << "Disconnected";
+			break;
+		}
+		std::cout << "\n";
+	}
+}
+
+void printNoNumbers()
+{
+	std::cout << "Name            Com Port    State\n";
+	for (int i = 0; i < controllers.size(); i++)
+	{
+		printf("%-16s%-12d", controllers[i].name.c_str(), controllers[i].comNumber);
 		switch (controllers[i].state)
 		{
 		case ACTIVE:
