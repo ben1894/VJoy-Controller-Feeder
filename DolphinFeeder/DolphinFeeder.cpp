@@ -36,7 +36,7 @@ int main()
 		return -1;
 	}
 
-
+	//Main control loop
 	while (1)
 	{
 		std::cout << "Select Operation to Preform:\n";
@@ -129,6 +129,7 @@ bool initialVerification()
 	return true;
 }
 
+//Displays options for editing a controller
 int editController()
 {
 	if (controllers.empty())
@@ -147,7 +148,7 @@ int editController()
 		"[3] = Resume Controller\n"
 		"[4] = Edit Name\n\n"
 		"Selection: ";
-	if (!cinNumber(option, 3))
+	if (!cinNumber(option, 4))
 	{
 		option = -1;
 	}
@@ -173,6 +174,7 @@ int editController()
 	return -1;
 }
 
+//Adds a controller
 int addController()
 {	
 	Controller *temp = new Controller();
@@ -220,6 +222,7 @@ int addController()
 
 }
 
+//The actual collection loop for the feeder
 int run()
 {
 	HANDLE rhnd = GetStdHandle(STD_INPUT_HANDLE);  // handle to read console
@@ -237,6 +240,8 @@ int run()
 	std::cout << "Feeder is running\n";
 	std::cout << "Press space to pause and return to menu\n\n";
 
+	//Stores pointers to all the active controllers in a separate structure to reduce 
+	//processing in loop
 	std::vector<Controller*> activeControllers;
 	for(int i = 0; i < controllers.size(); i++)
 	{
@@ -248,6 +253,7 @@ int run()
 
 	printNoNumbers();
 
+	//Loops, collecting data and breaks when a spacebar even is found
 	while (1)
 	{
 		GetNumberOfConsoleInputEvents(rhnd, &Events);
@@ -284,6 +290,7 @@ int run()
 	}
 }
 
+//Removes a controller
 int removeController()
 {
 	if(controllers.empty())
